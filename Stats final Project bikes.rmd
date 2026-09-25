@@ -1,0 +1,323 @@
+---
+title: "STAT 011 Final Project- Bike Sharing Demand Analysis"
+author: "Zihui Zhang, Dennis Wu, Jannelly Hwaynate, Sungha Woo"
+date: "2026-03-05"
+output:
+  html_document:
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+  pdf_document: default
+---
+
+### Load Data
+
+```{r setup, include=FALSE}
+bikes<-read.csv("bikes.csv")
+bikes <- na.omit(bikes)
+head(bikes)
+```
+
+```{r}
+names(bikes)
+summary(bikes)
+```
+
+### EDA - Distributions
+
+```{r}
+hist(bikes$cnt,
+     main = "Histogram of Total Bike Rentals",
+     xlab = "Total Rental Count (cnt)",
+     col = "red",
+     breaks = 30)
+
+boxplot(bikes$cnt,
+        main = "Boxplot of cnt",
+        horizontal = TRUE)
+```
+
+### EDA - Day/Time Patterns
+
+# Boxplot: cnt \~ workingday
+
+```{r}
+bikes$workingday <- factor(bikes$workingday,
+                           levels = c(0,1),
+                           labels = c("Non-Working Day", "Working Day"))
+
+boxplot(cnt ~ workingday,
+        data = bikes,
+        main = "Total Bike Rentals On Working Day",
+        xlab = "Day Type",
+        ylab = "Total Rental Count",
+        col = c("blue", "green"))
+aggregate(cnt ~ workingday, bikes, mean)
+
+```
+
+#Boxplot: cnt \~ holiday
+
+```{r}
+bikes$holiday <- factor(bikes$holiday,
+                        labels = c("Non-Holiday", "Holiday"))
+
+boxplot(cnt ~ holiday,
+        data = bikes,
+        main = "Total Bike Rentals Holiday",
+        xlab = "Day Type",
+        ylab = "Total Rental Count",
+        col = c("blue", "green"))
+aggregate(cnt ~ holiday, bikes, mean)
+
+```
+
+#Boxplot: cnt \~ weekday
+
+```{r}
+bikes$weekday <- factor(bikes$weekday,
+                        levels = 0:6,
+                        labels = c("Sun", "Mon", "Tues", "Wed",
+                                  "Thu", "Fri","Sat"))
+boxplot(cnt ~ weekday,
+        data = bikes,
+        main = "Total Bike Rentals On Weekday Day",
+        xlab = "Day Type", 
+        ylab = "Total Rental Count",
+        col = c("red", "orange", "blue", "green", "yellow", "pink", "purple")
+        )
+aggregate(cnt ~ weekday, bikes, mean)
+```
+
+#Line plot : cnt \~ hr
+
+```{r}
+hour_mean <- aggregate(cnt ~ hr, data = bikes, mean)
+
+plot(hour_mean$hr, hour_mean$cnt,
+     type = "l",
+     lwd = 2,
+     col = "blue",
+     xlab = "Hour of Day",
+     ylab = "Average Rental Count",
+     main = "Average Bike Rentals by Hour")
+summary(hour_mean)
+```
+
+### EDA - Weather
+
+#Scatterplot: temp vs cnt
+
+```{r}
+model <- lm(cnt ~ temp, data = bikes)
+
+plot(bikes$temp, bikes$cnt,
+     main = "Temperature vs Total Bike Rentals",
+     xlab = "Temperature",
+     ylab = "Total Rental Count",
+     pch = 16,
+     col = "blue")
+
+abline(model, col = "red", lwd = 5)
+```
+
+#Scatterplot: humidity vs cnt
+
+```{r}
+model1 <- lm(cnt ~ hum, data = bikes)
+
+plot(bikes$hum, bikes$cnt,
+     main = "Humidity vs Total Bike Rentals",
+     xlab = "Humidity",
+     ylab = "Total Rental Count",
+     pch = 16,
+     col = "blue")
+
+abline(model1, col = "red", lwd = 5)
+
+```
+
+#Scatterplot: windspeed vs cnt
+
+```{r}
+model2 <- lm(cnt ~ windspeed, data = bikes)
+
+plot(bikes$windspeed, bikes$cnt,
+     main = "Windspeed vs Total Bike Rentals",
+     xlab = "Windspeed",
+     ylab = "Total Rental Count",
+     pch = 16,
+     col = "blue")
+
+abline(model2, col = "red", lwd = 5)
+
+```
+
+#Boxplot: cnt \~ weathersit
+
+```{r}
+bikes$weathersit <- factor(bikes$weathersit,
+                           levels = 1:3,
+                           labels = c("Clear",
+                                      "Cloudy/Mist",
+                                      "Light Rain/Snow"))
+
+boxplot(cnt ~ weathersit,
+        data = bikes,
+        main = "Total Bike Rentals on Different Weather Condition",
+        xlab = "Weather Condition", 
+        ylab = "Total Rental Count",
+        col = c("red", "blue", "green"))
+
+```
+
+### EDA - Casual Rentals vs. Registered Rentals
+
+```{r}
+hist(bikes$registered,
+     main = "Histogram of Registered Bike Rentals",
+     xlab = "Total Registered Rental Count",
+     col = "red",
+     breaks = 30)
+
+boxplot(bikes$registered,
+        main = "Boxplot of Registered",
+        horizontal = TRUE)
+
+hist(bikes$casual,
+     main = "Histogram of Casual Bike Rentals",
+     xlab = "Total Casual Rental Count",
+     col = "red",
+     breaks = 30)
+
+boxplot(bikes$casual,
+        main = "Boxplot of Casual",
+        horizontal = TRUE)
+
+```
+
+```{r}
+bikes$workingday <- factor(bikes$workingday,
+                           labels = c("Non-Working Day", "Working Day"))
+
+boxplot(registered ~ workingday,
+        data = bikes,
+        main = "Registered Rentals by Working Day",
+        xlab = "Day Type",
+        ylab = "Registered Rental Count",
+        col = c("lightblue", "lightgreen"))
+
+boxplot(casual ~ workingday,
+        data = bikes,
+        main = "Casual Rentals by Working Day",
+        xlab = "Day Type",
+        ylab = "Casual Rental Count",
+        col = c("lightblue", "lightgreen"))
+
+```
+
+### Correlations
+
+```{r}
+reg_hour_mean <- aggregate(registered ~ hr, data = bikes, mean)
+
+plot(reg_hour_mean$hr, reg_hour_mean$registered,
+     type = "l",
+     lwd = 2,
+     col = "blue",
+     xlab = "Hour of Day",
+     ylab = "Average Registered Rentals",
+     main = "Average Registered Rentals by Hour")
+
+reg_hour_mean <- aggregate(casual ~ hr, data = bikes, mean)
+
+plot(reg_hour_mean$hr, reg_hour_mean$casual,
+     type = "l",
+     lwd = 2,
+     col = "blue",
+     xlab = "Hour of Day",
+     ylab = "Average Casual Rentals",
+     main = "Average Casual Rentals by Hour")
+
+```
+
+```{r}
+cor(bikes$temp, bikes$cnt)
+cor(bikes$hum, bikes$cnt)
+cor(bikes$windspeed, bikes$cnt)
+cor(bikes[, c("temp", "atemp", "hum", "windspeed", "cnt")])
+```
+
+#Analysis 1: Simple Linear Regression (temp vs cnt) + QQ plot + Confidence Interval
+
+```{r}
+Analysis1<- lm(cnt~temp, data=bikes)
+summary(Analysis1)
+cor(bikes$temp,bikes$cnt)
+
+# Plot: temperature vs rentals
+plot(bikes$temp, bikes$cnt, xlab="Temperature", ylab="Rentals")
+abline(Analysis1, col="red")
+
+#check residuals normality for Anlysis 1
+qqnorm(residuals(Analysis1))
+qqline(residuals(Analysis1),col="red")
+
+#Confidence Interval
+confint(Analysis1)
+```
+
+There is a significant positive relationship between temperature and bike rentals. The p-value for temperature is smaller than 0.05, so we reject the null hypothesis and conclude that temperature has a significant effect on bike rentals. As temperature increases by one unit, bike rentals tend to increase by 381. The 95% confidence interval for the temperature is (368.49, 394.10). The qqplot of residuals indicates that the normality assumption is satisfied.
+
+#Analysis2: Multiple Linear Regression (temp + season+ workingday) + 5 Predictions
+
+```{r}
+bikes$season <- factor(bikes$season)
+bikes$workingday <- factor(bikes$workingday,labels=c(0,1))
+Analysis2<- lm(cnt~temp+season+workingday,data=bikes)
+summary(Analysis2)
+#temperature vs.count
+plot(bikes$temp,bikes$cnt)
+
+#season vs.count
+boxplot(cnt~ season, data=bikes)
+
+#workingday vs.count
+boxplot(cnt~workingday, data=bikes)
+
+#check residuals normality
+qqnorm(residuals(Analysis2))
+qqline(residuals(Analysis2),col="red")
+
+#check diagnostics
+plot(Analysis2)
+
+#predict with new observations
+new_observations <- data.frame(
+  temp = c(0.3,0.5,0.7,0.8,0.9), 
+  season = factor(c(1,4,3,4,2), levels = levels(bikes$season)), 
+  workingday = factor(c(0,1,1,0,1),levels=c(0,1)))
+predict(Analysis2, newdata = new_observations)
+```
+
+Since the p-values of temperature and season are both smaller than 0.05, they are both significant. Workingday is not significant because its p-value is greater than 0.05. If the temperature increased by 1 unit, daily bike rental count will increase by 544 on average, holding other variables constant. Predictions for five new observations were resulting in counts of 110, 241, 233, 403, and 402, respectively. The residuals vs fitted plot shows no clear pattern, and the qqplot shows residuals are approximately normally distributed, so the linear regression assumptions are satisfied.
+
+#Analysis 3: Logistic Regression (temp + workingday) + 5 predictions
+
+```{r}
+mediancnt<- median(bikes$cnt)
+bikes$high_demand<- bikes$cnt>mediancnt
+Analysis3<-glm(high_demand~temp+workingday,data=bikes,family=binomial)
+summary(Analysis3)
+
+logit_reduced <- step(Analysis3, direction="backward")
+summary(logit_reduced)
+new_data <- data.frame(temp = c(0.7, 0.8, 0.1, 0.3, 0.4), workingday = factor(c(0, 1, 1, 0, 1), levels = levels(bikes$workingday)))
+
+# Predicted probabilities
+predict(logit_reduced, newdata=new_data, type="response")
+exp(4.73053)
+exp(0.19705)
+```
+
+Both temperature and workingday are significant because their p-value < 0.05. Each 1 unit increase in temperature multiples the odds of a high demand day by 113 times. Working days have 22% higher odds of being high demand compared to non-working days. Predicted probabilities for five new observations are 0.694, 0.816, 0.139, 0.255, and 0.401.
